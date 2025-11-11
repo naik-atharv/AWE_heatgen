@@ -1,0 +1,11 @@
+maxtemp
+Out[23]: np.float64(0.020327956286564586)
+
+maxcol1
+Out[24]: np.float64(0.02475407695595016)
+
+
+Issues to sort out:
+Figure out whether you are evaluating the jump at the right spot
+
+Figure out where fj needs to be calculated and include it
