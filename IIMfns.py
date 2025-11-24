@@ -33,7 +33,8 @@ def projdebug(R,X,Y,phi,rad):
     return nx,ny,xs,ys,alpha,kappa                
 
 def proj(n,dx,phidisc,X,Y):
-    phi    = gaussian_filter(phidisc, sigma=1) #get rid of this shit asap
+    # phi    = gaussian_filter(phidisc, sigma=1) #get rid of this shit asap
+    phi = phidisc
     alpha  = np.zeros_like(phi)
     dphidx = np.zeros_like(phi)
     dphidy = np.zeros_like(phi)
@@ -69,9 +70,10 @@ def proj(n,dx,phidisc,X,Y):
                 pnn[i,j]     = pxx[i,j]*nx[i,j]**2+2*nx[i,j]*ny[i,j]*pxy[i,j]+pyy[i,j]*ny[i,j]**2 
                 discrim  = norm**2 - 2*pnn[i,j]*phi[i,j] #discriminant of quadratic equation for alpha
                 if(abs(pnn[i,j])>eps and discrim>=0): #second order alpha possible, real roots of alpha exist
-                        alpha1    = (-norm + np.sqrt(discrim))/pnn[i,j]
-                        alpha2    = (-norm - np.sqrt(discrim))/pnn[i,j]
-                        alpha[i,j]= alpha1 if abs(alpha1) < abs(alpha2) else alpha2                
+                        # alpha1    = (-norm + np.sqrt(discrim))/pnn[i,j]
+                        # alpha2    = (-norm - np.sqrt(discrim))/pnn[i,j]
+                        # alpha[i,j]= alpha1 if abs(alpha1) < abs(alpha2) else alpha2     
+                        alpha[i,j]=-phi[i,j]/norm 
                 else: #resort to first order taylor expansion 
                         alpha[i,j]=-phi[i,j]/norm 
             
@@ -311,7 +313,7 @@ def IIM_schur(n,matind,f,dx,S,alpha,xs,ys,kapint,fmat,G,m,L,mode,kel,E_id,N_id,n
                         continue 
                     al   = alpha[l,k]
                     cur  = kapint[l,k]
-                    fj   = 0*jumpsource(xs[l,k],ys[l,k],kel,bp,G,m,L,mode) #xst,yst,kel,bp,G,m,L,mode
+                    fj   = jumpsource(xs[l,k],ys[l,k],kel,bp,G,m,L,mode) #xst,yst,kel,bp,G,m,L,mode
                     rhs[row] -= S[i,j]*(0.5*fj*al**2)*inv_h2
                     coeff     =-S[i,j]*(al+0.5*cur*al**2)*inv_h2
                     if   l==i-1: #map back to an edge, one irregular edge has one jump scalar

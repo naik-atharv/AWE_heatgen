@@ -19,17 +19,17 @@ from FVMfns1 import aperture,sysmat,FVMstuff,cdcalc1
 fac       = 0
 # llim,ulim = 500,1000  
 # for fac in facarr:
-n    = 500 #total no of points including ghost cells
+n    = 1000 #total no of points including ghost cells
 bm   = 72   #thermal conductivity of phi<0
 bp   = 0.58 #thermal conductivity of phi>0
 # jump= 0
-L    = 10**(-4)
+L    = 10**(-2)
 dx   = L/(n-2)
 x    = np.linspace(-(L/2)-dx/2,(L/2)+dx/2,n)
 y    = x 
 bj   = bp-bm
 X,Y  = np.meshgrid(x,y,indexing = 'ij')
-offs = 1e-6 #0.01*10**(-4) #offset to prevent mesh alignment
+offs = L/1e3 #0.01*10**(-4) #offset to prevent mesh alignment
 R    = round(0.08*L + offs, 6)
 # Rf   = fac*R
 x0,y0= (0,-(0+offs)) #0
@@ -39,28 +39,28 @@ x0,y0= (0,-(0+offs)) #0
 # usdf,phi = sdfcomp4(X,Y,x0,y0,R,Rf) #np.minimum(df1,df2)
 phi = Y-y0
 # phi = sdfcomp2(X,Y,x0,y0,R,ts,te)
-plt.figure()
-plt.contour(X[:,:],Y[:,:],phi[:,:].T,levels=60,cmap='coolwarm')
-plt.colorbar()
-plt.contour(X[1:-1,1: -1],Y[1:-1,1: -1],phi[1:-1,1: -1].T,levels=[0],colors='black') #,linestyles='dotted'
-plt.xlabel('z (m)')
-plt.ylabel('x (m)')
-plt.title(r'signed distance fn')
-plt.show()
+# plt.figure()
+# plt.contour(X[:,:],Y[:,:],phi[:,:].T,levels=60,cmap='coolwarm')
+# plt.colorbar()
+# plt.contour(X[1:-1,1: -1],Y[1:-1,1: -1],phi[1:-1,1: -1].T,levels=[0],colors='black') #,linestyles='dotted'
+# plt.xlabel('z (m)')
+# plt.ylabel('x (m)')
+# plt.title(r'signed distance fn')
+# plt.show()
 lelec = L #larc1(x0,y0,R,ts,te,L)  #perimeter of the electrode surface
 # lelec = larc4(x0,y0,Rf,R,ts,te,toff,X,L) #cross check once more!!!
 #%
 fmat    = irregfl(phi,n)
 matind  = idxfn(n) 
 #Volume Penalization params:
-gi         = -10*10**3              #BV current density, A/m^2
+gi         = -10*10**1              #BV current density, A/m^2
 eta,ibv= AWEvals(gi)    #Overpotential, Electrical conductivity, BV current den.
 kel        = 27.1 #S/m, 1M KOH
 dv,nv      = bcval(kel,lelec,L,gi,fac*0)          #Boundary condition values 
 etaN       = 1e-07  #Penalization parameter
 nsm        = 1      #Number of smear cells
-G,m,mode   = -gi/kel,L/12,4 #-gi/kel,L/12,4 
-G          = G*L/m    #Constant Current (A) case, for constant voltage comment it out
+G,m,mode   = -gi/kel,0,1   #-gi/kel,L/12,4 #-gi/kel,0,1  
+# G          = G*L/m    #Constant Current (A) case, for constant voltage comment it out
 ## FVM params:
 Lx,Ly   = aperture(n,-phi,dx,dx)
 A,rhs   = sysmat(n,Lx,Ly,matind,dx,dx,dv[0],nv[0])
@@ -69,9 +69,9 @@ mask    = np.where(Aarr>(1e-12)*dx**2,True,False)
 active  = np.asarray(matind[mask]).ravel() #ravel and np just for safety
 rhs_act = rhs[active]
 A_act   = A[np.ix_(active, active)]
-#%%
+#%
 solnact = spsolve(A_act,rhs_act)
-solnvec = np.ones((n-2)**2)*0
+solnvec = np.ones((n-2)**2)
 solnvec[active] = solnact
 # #Volume Penalization
 # chi     = chi_smooth(phi,dx,nsm)
@@ -85,14 +85,15 @@ for i in range(1, n-1):
         phel[i, j] = solnvec[matind[i, j]]
 phel  = bc_el(phel,dv[0],nv[0],n,dx,kel)
 ix,iy = cdcalc1(phel,-phi,kel,n,dx)
-plt.figure(),plt.contour(X[1:-1,1:-1],Y[1:-1,1:-1],phel[1:-1,1:-1],levels=50),plt.colorbar(),plt.title('Electric Potential (V)'),plt.savefig('cc_phiL12.png',dpi=300)
+# plt.figure(),plt.contour(X[1:-1,1:-1],Y[1:-1,1:-1],phel[1:-1,1:-1],levels=50),plt.colorbar(),plt.title('Electric Potential (V)'),plt.savefig('cc_phiL12.png',dpi=300)
 plt.show()
 # plt.figure(),plt.plot(x,phel[n//2,:])
 #%
 Q     = (ix**2 + iy**2)/kel
-jump  = -(eta-0.249)*gi       #Overpotential heating
+jump  = -(eta-0.249)*gi      #Overpotential heating
 ##Immersed Interface method
 nx,ny,xs,ys,alp,kapc= proj(n,dx,phi,X,Y) #projdebug(R,X,Y,phi,rad)
+alp[1:-1,1:-1]      = - phi[1:-1,1:-1]
 kapint              = kapinterp(n,kapc,x,y,fmat,xs,ys)
 f                   = np.where(phi>0,-Q/bp,-Q/bm)
 S                   = Sfn(phi)
@@ -133,7 +134,7 @@ qden       = np.hypot(qx,qy)
 
 gx,gy      = cdcalc1(phel,abs(phi),1,n,dx) #gradient of potential
 
-plt.figure(),plt.contour(X[1:-1,1:-1],Y[1:-1,1:-1],soln[1:-1,1:-1]-dv[1],levels=50,cmap='coolwarm'),plt.colorbar(),plt.title(r'$T$-$T_a$ (K)'),plt.savefig('cc_TL12.png',dpi=300)
+plt.figure(),plt.contour(X[1:-1,1:-1],Y[1:-1,1:-1],soln[1:-1,1:-1]-dv[1],levels=50,cmap='coolwarm'),plt.colorbar(),plt.title(r'$T$-$T_a$ (K)')#,plt.savefig('cc_TL12.png',dpi=300)
 # plt.figure(),plt.contourf(X[1:-1,1:-1],Y[1:-1,1:-1],cden[1:-1,1:-1]-dv[1],levels=50,cmap='coolwarm'),plt.colorbar(),plt.title(r'$T$-$T_a$ (K)')
 #%% Plotting routines
 # if fac==facarr[0]: #fixing colorbar across plots
@@ -218,7 +219,7 @@ del nx,ny,xs,ys,alp,kapc,kapint,S,E_id,N_id,st_nodes,i_owner,j_owner,M_list,B,E,
 al       = round(y0+0.5*L,6)
 Tan,xarr = Tanal(n,al,L,Q,bm,bp,dv[1],-jump)
 plt.figure()
-plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
+# plt.ticklabel_format(style='sci', axis='x', scilimits=(0, 0))
 plt.plot(xarr[1:-1]-0.5*L,Tan[1:-1],'b-',label='Analytical') #Tan,xarr = Tanal(100,al,L,Q,ks,kl,dv,C)
 plt.plot(x[1:-1],soln[n//2,1:-1],'r--',label='Numerical') 
 plt.title('Validation') 
