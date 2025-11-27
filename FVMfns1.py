@@ -283,6 +283,29 @@ def qanfn3(X,Y,G):
     
 #     return ix,iy
 
+# def cdcalc1(soln,phi,kel,n,dx):
+#     'Send -phi as input argument'
+#     ix = np.zeros_like(phi)
+#     iy = np.zeros_like(phi)
+#     for i in range(1,n-1):
+#         for j in range(1,n-1):
+#             if(phi[i,j]>0):
+#                 continue
+#             if((phi[i,j]<0)and(phi[i+1,j]<0)and(phi[i-1,j]<0)):
+#                 ix[i,j] = -kel*(soln[i+1,j]-soln[i-1,j])/(2*dx)
+#             elif((phi[i,j]<0)and(phi[i+1,j]<0)and(phi[i-1,j]>0)and(phi[i+2,j]<0)):
+#                 ix[i,j] =  -kel*(4*soln[i+1,j]-soln[i+2,j]-3*soln[i,j])/(2*dx)
+#             else:
+#                 print('Simple approach failing for i flux at i,j=',i,j)
+#             if((phi[i,j]<0)and(phi[i,j+1]<0)and(phi[i,j-1]<0)):
+#                 iy[i,j] = -kel*(soln[i,j+1]-soln[i,j-1])/(2*dx)
+#             elif((phi[i,j]<0)and(phi[i,j+1]<0)and(phi[i,j-1]>0)and(phi[i,j+2]<0)):
+#                 iy[i,j] =  -kel*(4*soln[i,j+1]-soln[i,j+2]-3*soln[i,j])/(2*dx)
+#             else:
+#                 print('Simple approach failing for j flux at i,j=',i,j)
+                
+#     return ix,iy
+            
 def cdcalc1(soln,phi,kel,n,dx):
     'Send -phi as input argument'
     ix = np.zeros_like(phi)
@@ -291,22 +314,24 @@ def cdcalc1(soln,phi,kel,n,dx):
         for j in range(1,n-1):
             if(phi[i,j]>0):
                 continue
-            if((phi[i,j]<0)and(phi[i+1,j]<0)and(phi[i-1,j]<0)):
-                ix[i,j] = -kel*(soln[i+1,j]-soln[i-1,j])/(2*dx)
-            elif((phi[i,j]<0)and(phi[i+1,j]<0)and(phi[i-1,j]>0)and(phi[i+2,j]<0)):
+            if((phi[i,j]<0)and(phi[i+1,j]<0)and(phi[i-1,j]<0)): #central
+                ix[i,j] = -kel*(soln[i+1,j]-soln[i-1,j])/(2*dx) 
+            elif((phi[i,j]<0)and(phi[i+1,j]<0)and(phi[i-1,j]>0)and(phi[i+2,j]<0)): #forward 
                 ix[i,j] =  -kel*(4*soln[i+1,j]-soln[i+2,j]-3*soln[i,j])/(2*dx)
+            elif((phi[i,j]<0)and(phi[i-1,j]<0)and(phi[i+1,j]>0)and(phi[i-2,j]<0)): #backward
+                ix[i,j] =  -kel*(3*soln[i,j]-4*soln[i-1,j]+soln[i-2,j])/(2*dx)
             else:
                 print('Simple approach failing for i flux at i,j=',i,j)
-            if((phi[i,j]<0)and(phi[i,j+1]<0)and(phi[i,j-1]<0)):
+            if((phi[i,j]<0)and(phi[i,j+1]<0)and(phi[i,j-1]<0)): #central
                 iy[i,j] = -kel*(soln[i,j+1]-soln[i,j-1])/(2*dx)
-            elif((phi[i,j]<0)and(phi[i,j+1]<0)and(phi[i,j-1]>0)and(phi[i,j+2]<0)):
+            elif((phi[i,j]<0)and(phi[i,j+1]<0)and(phi[i,j-1]>0)and(phi[i,j+2]<0)): #forward 
                 iy[i,j] =  -kel*(4*soln[i,j+1]-soln[i,j+2]-3*soln[i,j])/(2*dx)
+            elif((phi[i,j]<0)and(phi[i,j-1]<0)and(phi[i,j+1]>0)and(phi[i,j-2]<0)): #backward
+                iy[i,j] =  -kel*(3*soln[i,j]-4*soln[i,j-1]+soln[i,j-2])/(2*dx)
             else:
                 print('Simple approach failing for j flux at i,j=',i,j)
                 
-    return ix,iy
-            
-            
+    return ix,iy           
 
 def bc_el(soln,dv,nv,n,dx,kel):
     'Imposes the boundary conditions for electric potential'

@@ -17,9 +17,7 @@ def AWEvals(ival):
     ibv  = 2*i0c*np.sinh(alc*Fc*eta/Rc/T0)
     return eta,ibv
 
-def Tanal(n,al,L,Q,bm,bp,dv,C):
-    # L   = 2
-    # al  = 0.51
+def Tanal(n,al,L,Q,bm,bp,dv,C): #old version,get rid
     Qc  = np.max(abs(Q))    
     dx  = L/(n-2)
     xarr= np.linspace(-0-dx/2,L+dx/2,n)
@@ -32,3 +30,22 @@ def Tanal(n,al,L,Q,bm,bp,dv,C):
     # Tan[0]     = 2*dv - Tan[1]
     # Tan[-1]    = Tan[-2]
     return Tan,xarr
+
+def Tanal2(n,x,dx,al,L,Q,bm,bp,dv,nv,j):
+    Qc  = np.max(abs(Q))    
+    # print('Qc,j,bm,bp,nv=',Qc,j,bm,bp,nv)
+    Tan = np.zeros_like(x)
+    xarr= x + L/2
+    mask1 = (xarr >= 0) & (xarr < al)
+    mask2 = (xarr >= al)& (xarr <= L)
+    Tan[mask1] = (j+Qc*(L-al)-nv)*xarr[mask1]/bm + dv
+    
+    Tan[mask2] = -Qc*(xarr[mask2]**2-al**2)/(2*bp) + (Qc*L-nv)*(xarr[mask2]-al)/(bp) + (j+Qc*(L-al)-nv)*al/bm + dv
+    return Tan
+
+def dTfn(n,al,L,Q,bm,nv,j):
+    Qc = np.max(abs(Q))
+    dT = (j + Qc*(L-al) - nv)*(al)/bm
+    print('dT_ref=',dT)
+    return dT
+        

@@ -2,7 +2,7 @@
 import numpy as np
 from scipy.sparse import lil_matrix
 
-def bcval(kel,lelec,L,ibv,frac):
+def bcval(kel,lelec,L,ibv,frac): #is not non-dimensional yet!!
     'frac = size of the additional domain/size of computational domain'
     iout = ibv*lelec/L  #avg current leaving the domain
     Qv   = (iout**2)/kel#avg ohmic heating/m^3
@@ -12,6 +12,9 @@ def bcval(kel,lelec,L,ibv,frac):
     nv = np.array([0,qin]) #Neumann values of Electric Potential and [0] Temperature [1]
     return dv,nv
 
+def redim(phiL,deltaphi,phel): #re-dimensionalize the non-dimensional field
+    return deltaphi*phel + phiL
+    
 def sdfbump(X,Y,x0,y0,R):
     phi_flat = Y-y0
     phi_bump = np.sqrt((X - x0)**2 + (Y - y0)**2) - R

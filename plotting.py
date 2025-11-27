@@ -54,3 +54,21 @@ def contours2(X,Y,gx,gy,phel,phi,n,dx,facarr,fac,ulim,llim,maxcol2,mincol2): #,m
     plt.title(r'Electric potential contour and gradients (V)')
     plt.savefig(r'bump_plots/vector/cdenvec_'+str(np.argmax(facarr/fac==1)+1)+'.png',dpi=400)
 
+def cont3(X,Y,fld,phi,cm,lvl,t,sav=None): #For plotting contours mid-simulation
+   plt.figure()
+   plt.contour(X[1:-1,1:-1]*1e6,Y[1:-1,1:-1]*1e6,fld[1:-1,1:-1],levels=lvl,cmap=cm)
+   plt.colorbar()
+   plt.contour(X[1:-1,1: -1]*1e6,Y[1:-1,1: -1]*1e6,phi[1:-1,1: -1],levels=[0],colors='black',linestyles='dotted')
+   plt.xlabel(r'$x$ $ \mathrm{ (\mu m})$')
+   plt.ylabel(r'$z$ $ \mathrm{ (\mu m})$')
+   if   t==0:
+    plt.title(r'Signed Distance function')
+   elif t==1:
+    plt.title(r'$\phi $ (V)')
+   elif t==2:
+    plt.title(r'$T$-$T_a$ (K)')  
+   else:
+    print('Title error')
+   if sav is not None:
+     plt.savefig('Results/'+sav+'.png',dpi=300)
+   plt.show()
